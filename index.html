@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FP Dual — ASIR+Cloud 2026-27</title>
+<meta name="theme-color" content="#0f1923">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FP Dual">
+<link rel="manifest" id="manifest-link">
+<style>
+:root {
+  --bg: #0f1923;
+  --surface: #172030;
+  --surface2: #1e2d40;
+  --surface3: #253448;
+  --border: #2c3f58;
+  --text: #dde8f5;
+  --muted: #6a8baa;
+  --accent-emp: #4a9de8;
+  --accent-ik: #3dbf82;
+  --accent-pam: #e8934a;
+  --accent-fes: #e05858;
+  --accent-vac-v: #3bbfa0;
+  --accent-vac-n: #d4b03a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  max-width:500px;
+  margin:0 auto;
+  overflow-x:hidden;
+}
+
+/* ─── HEADER ─────────────────────────────────────────── */
+.hdr{
+  background:var(--surface);
+  padding:14px 18px 10px;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+}
+.hdr-top{display:flex;align-items:center;justify-content:space-between}
+.hdr-title{font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted)}
+.hdr-today{font-size:12px;color:var(--muted)}
+
+/* ─── SUMMARY CARDS ──────────────────────────────────── */
+.summary{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  padding:12px 14px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.scard{
+  background:var(--surface2);border-radius:12px;
+  padding:11px 13px;
+}
+.scard-lbl{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.scard-val{font-size:22px;font-weight:800;line-height:1}
+.scard-val span{font-size:12px;font-weight:400;color:var(--muted);margin-left:1px}
+.scard-sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+.bar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* ─── MONTH NAV ──────────────────────────────────────── */
+.mnav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px 8px;
+}
+.mnav-btn{
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  width:38px;height:38px;border-radius:10px;
+  font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .1s;
+  user-select:none;
+}
+.mnav-btn:active{background:var(--border);transform:scale(.92)}
+.mnav-btn:disabled{opacity:.3;cursor:default}
+.mnav-label{font-size:20px;font-weight:800;letter-spacing:.2px;text-transform:capitalize}
+
+/* ─── CALENDAR ───────────────────────────────────────── */
+.cal-dows{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  padding:0 12px;margin-bottom:3px;
+}
+.dow{
+  text-align:center;font-size:10px;font-weight:700;
+  letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:2px 0;
+}
+.cal-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:3px;padding:0 12px 8px;
+}
+.cell{
+  aspect-ratio:1;border-radius:9px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:5px 5px 4px;
+  position:relative;cursor:pointer;
+  transition:transform .12s,box-shadow .12s;
+  overflow:hidden;min-height:42px;
+}
+.cell:active{transform:scale(.9)}
+.cell.inert{cursor:default}
+.cell.inert:active{transform:none}
+
+/* type colors */
+.t-out    {background:#111923;opacity:.35}
+.t-none   {background:#141e2b;cursor:default}
+.t-weekend{background:#1a2535}
+.t-festivo{background:rgba(224,88,88,.18);border:1px solid rgba(224,88,88,.3)}
+.t-empresa{background:rgba(74,157,232,.2);border:1px solid rgba(74,157,232,.3)}
+.t-pamplona{background:rgba(232,147,74,.22);border:1px solid rgba(232,147,74,.38)}
+.t-dual{background:linear-gradient(135deg,rgba(74,157,232,.22) 50%,rgba(61,191,130,.22) 50%);border:1px solid rgba(74,157,232,.25)}
+.t-ikastetxea{background:rgba(61,191,130,.2);border:1px solid rgba(61,191,130,.3)}
+.t-vacacion_v{background:rgba(59,191,160,.2);border:1px solid rgba(59,191,160,.32)}
+.t-vacacion_n{background:rgba(212,176,58,.2);border:1px solid rgba(212,176,58,.35)}
+
+.cell.today{box-shadow:0 0 0 2.5px #fff,0 0 0 4px rgba(255,255,255,.15)}
+.cell.is-start::after,.cell.is-end::after{
+  content:'';position:absolute;top:3px;right:3px;
+  width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4);
+}
+
+.dnum{font-size:14px;font-weight:700;line-height:1;color:var(--text)}
+.t-out .dnum,.t-none .dnum,.t-weekend .dnum{color:var(--muted)}
+
+.dhours{font-size:9px;font-weight:800;line-height:1.3;text-align:right}
+.dhours .e{color:#6bbaff}
+.dhours .i{color:#5dd69a}
+
+/* ─── LEGEND ─────────────────────────────────────────── */
+.legend{padding:12px 14px 16px}
+.leg-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.leg-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.leg-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.leg-swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.08)}
+.leg-swatch.dual-sw{background:linear-gradient(135deg,rgba(74,157,232,.6) 50%,rgba(61,191,130,.6) 50%)}
+
+/* ─── OVERLAY / POPUP ────────────────────────────────── */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);
+  z-index:200;opacity:0;pointer-events:none;
+  transition:opacity .25s;backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+.overlay.show{opacity:1;pointer-events:all}
+.popup{
+  position:fixed;bottom:0;left:50%;
+  transform:translateX(-50%) translateY(102%);
+  width:100%;max-width:500px;
+  background:var(--surface);
+  border-radius:22px 22px 0 0;
+  padding:16px 20px calc(env(safe-area-inset-bottom,0px) + 28px);
+  z-index:201;
+  transition:transform .32s cubic-bezier(.34,1.2,.64,1);
+  border-top:1px solid var(--border);
+}
+.popup.show{transform:translateX(-50%) translateY(0)}
+.phandle{width:38px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.pdate{font-size:13px;color:var(--muted);text-transform:capitalize;margin-bottom:5px}
+.pbadge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:20px;
+  font-size:12px;font-weight:700;margin-bottom:16px;
+  border:1px solid;
+}
+.prows{display:flex;flex-direction:column;gap:8px}
+.prow{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 14px;
+  background:var(--surface2);border-radius:10px;
+}
+.prow-lbl{font-size:13px;color:var(--muted)}
+.prow-val{font-size:15px;font-weight:700}
+.psched{
+  margin-top:10px;padding:11px 14px;
+  background:var(--surface2);border-radius:10px;
+  font-size:12px;color:var(--muted);line-height:1.6;
+}
+.psched strong{color:var(--text);font-weight:600}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-title">FP Dual · ASIR+Cloud</div>
+    <div class="hdr-today" id="hdr-today"></div>
+  </div>
+</header>
+
+<div class="summary" id="summary"></div>
+
+<div class="mnav">
+  <button class="mnav-btn" id="prev-btn">‹</button>
+  <div class="mnav-label" id="mnav-label"></div>
+  <button class="mnav-btn" id="next-btn">›</button>
+</div>
+
+<div class="cal-dows">
+  <div class="dow">L</div><div class="dow">M</div><div class="dow">X</div>
+  <div class="dow">J</div><div class="dow">V</div>
+  <div class="dow" style="color:#d4b03a">S</div>
+  <div class="dow" style="color:#d4b03a">D</div>
+</div>
+
+<div class="cal-grid" id="cal-grid"></div>
+
+<div class="legend" id="legend"></div>
+
+<div class="overlay" id="overlay"></div>
+<div class="popup" id="popup">
+  <div class="phandle"></div>
+  <div id="popup-body"></div>
+</div>
+
+<script>
+/* ─── DATA ────────────────────────────────────────────── */
+const CAL = {"2026-06-01":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-02":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-03":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-04":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-05":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-06":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-06-07":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-06-08":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-09":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-10":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-11":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-12":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-13":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-06-14":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-06-15":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-16":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-17":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-18":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-19":{"type":"out","empH":0,"ikH":0,"schedule":""},"2026-06-20":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-06-21":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-06-22":{"type":"pamplona","empH":8,"ikH":0,"schedule":"De 8:00 a 14:00 y 14:30 a 16:30"},"2026-06-23":{"type":"pamplona","empH":8,"ikH":0,"schedule":"De 8:00 a 14:00 y 14:30 a 16:30"},"2026-06-24":{"type":"pamplona","empH":8,"ikH":0,"schedule":"De 8:00 a 14:00 y 14:30 a 16:30"},"2026-06-25":{"type":"pamplona","empH":8,"ikH":0,"schedule":"De 8:00 a 14:00 y 14:30 a 16:30"},"2026-06-26":{"type":"pamplona","empH":7,"ikH":0,"schedule":"De 8:00 a 15:00"},"2026-06-27":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-06-28":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-06-29":{"type":"pamplona","empH":8,"ikH":0,"schedule":"De 8:00 a 14:00 y 14:30 a 16:30"},"2026-06-30":{"type":"pamplona","empH":8,"ikH":0,"schedule":"De 8:00 a 14:00 y 14:30 a 16:30"},"2026-07-01":{"type":"pamplona","empH":8,"ikH":0,"schedule":"De 8:00 a 14:00 y 14:30 a 16:30"},"2026-07-02":{"type":"pamplona","empH":8,"ikH":0,"schedule":"De 8:00 a 14:00 y 14:30 a 16:30"},"2026-07-03":{"type":"pamplona","empH":7,"ikH":0,"schedule":"De 8:00 a 15:00"},"2026-07-04":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-07-05":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-07-06":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-07":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-08":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-09":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-10":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-11":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-07-12":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-07-13":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-14":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-15":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-16":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-17":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-18":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-07-19":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-07-20":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-21":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-22":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-23":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-24":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-07-25":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-07-26":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-07-27":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-28":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-07-29":{"type":"vacacion_n","empH":0,"ikH":0,"schedule":""},"2026-07-30":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-07-31":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-08-01":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-08-02":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-08-03":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-08-04":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-08-05":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-08-06":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-08-07":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-08-08":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-08-09":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-08-10":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-08-11":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-08-12":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-08-13":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2026-08-14":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-08-15":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-08-16":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-08-17":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2026-08-18":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2026-08-19":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2026-08-20":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-08-21":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-08-22":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-08-23":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-08-24":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2026-08-25":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2026-08-26":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2026-08-27":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2026-08-28":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2026-08-29":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-08-30":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-08-31":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2026-09-01":{"type":"ikastetxea","empH":0,"ikH":6,"schedule":"De 9:00 a 15:00 (ikastetxea)"},"2026-09-02":{"type":"ikastetxea","empH":0,"ikH":6,"schedule":"De 9:00 a 15:00 (ikastetxea)"},"2026-09-03":{"type":"ikastetxea","empH":0,"ikH":6,"schedule":"De 9:00 a 15:00 (ikastetxea)"},"2026-09-04":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-05":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-09-06":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-09-07":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-08":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-09":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-10":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-11":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-12":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-09-13":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-09-14":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-15":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-16":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-17":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-18":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-19":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-09-20":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-09-21":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-22":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-23":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-24":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-25":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-26":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-09-27":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-09-28":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-29":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-09-30":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-01":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-02":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-03":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-10-04":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-10-05":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-06":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-07":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-08":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-09":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-10":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-10-11":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-10-12":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-10-13":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-14":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-15":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-16":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-17":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-10-18":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-10-19":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-20":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-21":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-22":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-23":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-24":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-10-25":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-10-26":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-27":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-28":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-29":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-30":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-10-31":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-11-01":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-11-02":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-03":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-04":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-05":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-06":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-07":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-11-08":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-11-09":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-10":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-11":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-12":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-13":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-14":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-11-15":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-11-16":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-17":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-18":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-19":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-20":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-21":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-11-22":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-11-23":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-24":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-25":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-26":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-27":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-11-28":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-11-29":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-11-30":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-01":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-02":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-03":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-04":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-05":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-06":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-07":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-08":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-09":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-10":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-11":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-12":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-12-13":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-12-14":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-15":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-16":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-17":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-18":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2026-12-19":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2026-12-20":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-21":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-22":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-23":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-24":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-25":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-26":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-27":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-28":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-29":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-30":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2026-12-31":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-01-01":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-01-02":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-01-03":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-01-04":{"type":"vacacion_v","empH":0,"ikH":0,"schedule":""},"2027-01-05":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-01-06":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-01-07":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-08":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-09":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-01-10":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-01-11":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-12":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-13":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-14":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-15":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-16":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-01-17":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-01-18":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-19":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-20":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-21":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-22":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-23":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-01-24":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-01-25":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-26":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-27":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-01-28":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-01-29":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-01-30":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-01-31":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-02-01":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-02":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-03":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-04":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-05":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-02-06":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-02-07":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-02-08":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-02-09":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-02-10":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-11":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-12":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-13":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-02-14":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-02-15":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-16":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-17":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-18":{"type":"dual","empH":4,"ikH":4,"schedule":"De 8:00 a 12:00 empresa / De 13:00 a 17:00 ikastetxea"},"2027-02-19":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-02-20":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-02-21":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-02-22":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-02-23":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-02-24":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-02-25":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-02-26":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-02-27":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-02-28":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-03-01":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-02":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-03":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-04":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-05":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-06":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-03-07":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-03-08":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-09":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-10":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-11":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-12":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-13":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-03-14":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-03-15":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-16":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-17":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-18":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-03-19":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-03-20":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-03-21":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-03-22":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-23":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-24":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-03-25":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-03-26":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-03-27":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-03-28":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-03-29":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-03-30":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-03-31":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-01":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-04-02":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-04-03":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-04-04":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-04-05":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-06":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-07":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-08":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-09":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-10":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-04-11":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-04-12":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-13":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-14":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-15":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-16":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-17":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-04-18":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-04-19":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-20":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-21":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-22":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-23":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-24":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-04-25":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-04-26":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-27":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-28":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-29":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-04-30":{"type":"empresa","empH":6,"ikH":0,"schedule":"De 8:00 a 14:00"},"2027-05-01":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-05-02":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-05-03":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-04":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-05":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-06":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-07":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-08":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-05-09":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-05-10":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-11":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-12":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-13":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-14":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-15":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-05-16":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-05-17":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-18":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-19":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-20":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-21":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-22":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-05-23":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-05-24":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-25":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-26":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-27":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-28":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-05-29":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-05-30":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-05-31":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-01":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-02":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-03":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-04":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-05":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-06-06":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-06-07":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-08":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-09":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-10":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-11":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-12":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-06-13":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-06-14":{"type":"empresa","empH":5,"ikH":0,"schedule":"De 8:00 a 13:00"},"2027-06-15":{"type":"vacacion_n","empH":0,"ikH":0,"schedule":""},"2027-06-16":{"type":"vacacion_n","empH":0,"ikH":0,"schedule":""},"2027-06-17":{"type":"vacacion_n","empH":0,"ikH":0,"schedule":""},"2027-06-18":{"type":"vacacion_n","empH":0,"ikH":0,"schedule":""},"2027-06-19":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-06-20":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-06-21":{"type":"vacacion_n","empH":0,"ikH":0,"schedule":""},"2027-06-22":{"type":"out","empH":0,"ikH":0,"schedule":""},"2027-06-23":{"type":"out","empH":0,"ikH":0,"schedule":""},"2027-06-24":{"type":"festivo","empH":0,"ikH":0,"schedule":""},"2027-06-25":{"type":"out","empH":0,"ikH":0,"schedule":""},"2027-06-26":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-06-27":{"type":"weekend","empH":0,"ikH":0,"schedule":""},"2027-06-28":{"type":"out","empH":0,"ikH":0,"schedule":""},"2027-06-29":{"type":"out","empH":0,"ikH":0,"schedule":""},"2027-06-30":{"type":"out","empH":0,"ikH":0,"schedule":""}};
+
+/* ─── CONSTANTS ──────────────────────────────────────── */
+const START = '2026-06-22';
+const END   = '2027-06-21';
+const TARGET_EMP_H = 1100, TARGET_IK_H = 400;
+const TARGET_EMP_D = 226,  TARGET_IK_D = 100;
+
+const MONTHS = [
+  [2026,6],[2026,7],[2026,8],[2026,9],[2026,10],[2026,11],[2026,12],
+  [2027,1],[2027,2],[2027,3],[2027,4],[2027,5],[2027,6]
+];
+const MN = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+            'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DN = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+const TYPE_META = {
+  empresa:    {label:'Empresa',              color:'#4a9de8'},
+  pamplona:   {label:'Empresa · Pamplona',   color:'#e8934a'},
+  dual:       {label:'Dual',                 color:'#4a9de8'},
+  ikastetxea: {label:'Ikastetxea',           color:'#3dbf82'},
+  festivo:    {label:'Festivo',              color:'#e05858'},
+  vacacion_v: {label:'Vacaciones',           color:'#3bbfa0'},
+  vacacion_n: {label:'Vacaciones (cambio)',  color:'#d4b03a'},
+  weekend:    {label:'Fin de semana',        color:'#4a6080'},
+  out:        {label:'Fuera del período',    color:'#3a4a5a'},
+  none:       {label:'',                     color:'#243447'},
+};
+
+/* ─── STATE ──────────────────────────────────────────── */
+let curIdx = 0;
+
+const todayDate = new Date();
+const todayStr = [
+  todayDate.getFullYear(),
+  String(todayDate.getMonth()+1).padStart(2,'0'),
+  String(todayDate.getDate()).padStart(2,'0')
+].join('-');
+
+/* ─── HELPERS ────────────────────────────────────────── */
+function p2(n){ return String(n).padStart(2,'0'); }
+function ds(y,m,d){ return `${y}-${p2(m)}-${p2(d)}`; }
+
+function computeTotals(){
+  let eH=0,iH=0,eD=0,iD=0;
+  for(const [date,d] of Object.entries(CAL)){
+    if(date < START || date > todayStr || date > END) continue;
+    eH += d.empH; iH += d.ikH;
+    if(d.empH > 0) eD++;
+    if(d.ikH > 0) iD++;
+  }
+  return {eH,iH,eD,iD};
+}
+
+/* ─── PWA SETUP ──────────────────────────────────────── */
+(function setupPWA(){
+  const icon = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f1923'/><text y='62' x='50' text-anchor='middle' font-size='52' font-family='system-ui'>📅</text></svg>`;
+  const manifest = {
+    name:'FP Dual ASIR+Cloud 2026-27',
+    short_name:'FP Dual',
+    description:'Calendario laboral FP Dual ASIR+Cloud 2026-27',
+    start_url:'./',
+    display:'standalone',
+    background_color:'#0f1923',
+    theme_color:'#0f1923',
+    icons:[{src:icon,sizes:'any',type:'image/svg+xml'}]
+  };
+  const blob = new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+  document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+})();
+
+/* ─── RENDER SUMMARY ─────────────────────────────────── */
+function renderSummary(){
+  const {eH,iH,eD,iD} = computeTotals();
+  const pE = Math.min(100, Math.round(eH/TARGET_EMP_H*100));
+  const pI = Math.min(100, Math.round(iH/TARGET_IK_H*100));
+  const periodStarted = todayStr >= START;
+
+  document.getElementById('summary').innerHTML = `
+    <div class="scard">
+      <div class="scard-lbl">Empresa</div>
+      <div class="scard-val" style="color:var(--accent-emp)">${eH}<span>h</span></div>
+      <div class="scard-sub">${periodStarted ? TARGET_EMP_H-eH+'h restantes' : 'Período aún no iniciado'}<br>${eD} / ${TARGET_EMP_D} días</div>
+      <div class="bar"><div class="bar-fill" style="width:${pE}%;background:var(--accent-emp)"></div></div>
+    </div>
+    <div class="scard">
+      <div class="scard-lbl">Ikastetxea</div>
+      <div class="scard-val" style="color:var(--accent-ik)">${iH}<span>h</span></div>
+      <div class="scard-sub">${periodStarted ? TARGET_IK_H-iH+'h restantes' : 'Período aún no iniciado'}<br>${iD} / ${TARGET_IK_D} días</div>
+      <div class="bar"><div class="bar-fill" style="width:${pI}%;background:var(--accent-ik)"></div></div>
+    </div>`;
+
+  const ty = todayDate.getFullYear(), tm = todayDate.getMonth()+1, td = todayDate.getDate();
+  document.getElementById('hdr-today').textContent =
+    `${td} ${MN[tm].slice(0,3)} ${ty}`;
+}
+
+/* ─── RENDER MONTH ───────────────────────────────────── */
+function renderMonth(){
+  const [year, month] = MONTHS[curIdx];
+  document.getElementById('mnav-label').textContent = `${MN[month]} ${year}`;
+
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  prevBtn.disabled = curIdx === 0;
+  nextBtn.disabled = curIdx === MONTHS.length - 1;
+
+  const firstDow = (new Date(year, month-1, 1).getDay() + 6) % 7; // Mon=0
+  const lastDay  = new Date(year, month, 0).getDate();
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // leading blanks
+  for(let i = 0; i < firstDow; i++){
+    const el = document.createElement('div');
+    el.className = 'cell t-none inert';
+    grid.appendChild(el);
+  }
+
+  for(let d = 1; d <= lastDay; d++){
+    const dateStr = ds(year, month, d);
+    const day = CAL[dateStr] || {type:'none',empH:0,ikH:0,schedule:''};
+    const t = day.type;
+
+    const el = document.createElement('div');
+    el.className = `cell t-${t}`;
+    if(t === 'out' || t === 'none') el.classList.add('inert');
+    if(dateStr === todayStr) el.classList.add('today');
+    if(dateStr === START) el.classList.add('is-start');
+    if(dateStr === END)   el.classList.add('is-end');
+
+    let hoursHtml = '';
+    if(day.empH > 0 || day.ikH > 0){
+      let parts = '';
+      if(day.empH > 0) parts += `<span class="e">${day.empH}h</span>`;
+      if(day.ikH  > 0) parts += (parts ? '<br>' : '') + `<span class="i">${day.ikH}h</span>`;
+      hoursHtml = `<div class="dhours">${parts}</div>`;
+    } else {
+      hoursHtml = '<div class="dhours"></div>';
+    }
+
+    el.innerHTML = `<span class="dnum">${d}</span>${hoursHtml}`;
+
+    if(t !== 'out' && t !== 'none'){
+      el.addEventListener('click', () => openPopup(dateStr, day, d, year, month));
+    }
+
+    grid.appendChild(el);
+  }
+
+  // trailing blanks
+  const total = firstDow + lastDay;
+  const rem = total % 7;
+  if(rem > 0){
+    for(let i = rem; i < 7; i++){
+      const el = document.createElement('div');
+      el.className = 'cell t-none inert';
+      grid.appendChild(el);
+    }
+  }
+}
+
+/* ─── RENDER LEGEND ──────────────────────────────────── */
+function renderLegend(){
+  const items = [
+    ['empresa',    'Empresa'],
+    ['pamplona',   'Pamplona'],
+    ['dual',       'Dual (emp+ik)'],
+    ['ikastetxea', 'Ikastetxea'],
+    ['festivo',    'Festivo'],
+    ['vacacion_v', 'Vacaciones'],
+    ['vacacion_n', 'Vac. cambio'],
+    ['weekend',    'Fin de semana'],
+  ];
+
+  const swatchStyle = t => {
+    const c = TYPE_META[t].color;
+    if(t === 'dual') return 'class="leg-swatch dual-sw"';
+    return `class="leg-swatch" style="background:${c}44;border-color:${c}66"`;
+  };
+
+  document.getElementById('legend').innerHTML = `
+    <div class="leg-title">Leyenda</div>
+    <div class="leg-grid">
+      ${items.map(([t,lbl]) => `
+        <div class="leg-item">
+          <div ${swatchStyle(t)}></div>
+          <span>${lbl}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* ─── POPUP ──────────────────────────────────────────── */
+function openPopup(dateStr, day, dayNum, year, month){
+  const weekday = DN[new Date(year, month-1, dayNum).getDay()];
+  const dateLabel = `${weekday}, ${dayNum} de ${MN[month].toLowerCase()} de ${year}`;
+  const meta = TYPE_META[day.type] || TYPE_META.none;
+  const c = meta.color;
+
+  let rows = '';
+  if(day.empH > 0){
+    rows += `<div class="prow">
+      <span class="prow-lbl">⚙ Empresa</span>
+      <span class="prow-val" style="color:var(--accent-emp)">${day.empH} h</span>
+    </div>`;
+  }
+  if(day.ikH > 0){
+    rows += `<div class="prow">
+      <span class="prow-lbl">📚 Ikastetxea</span>
+      <span class="prow-val" style="color:var(--accent-ik)">${day.ikH} h</span>
+    </div>`;
+  }
+  if(!rows){
+    rows = `<div class="prow"><span class="prow-lbl">Sin horas programadas</span></div>`;
+  }
+
+  let schedHtml = '';
+  if(day.schedule){
+    const parts = day.schedule.split(' / ');
+    schedHtml = `<div class="psched">${parts.map(p => `<strong>🕐</strong> ${p}`).join('<br>')}</div>`;
+  }
+
+  // cumulative up to this date
+  let cumEmp = 0, cumIk = 0;
+  for(const [dt, d] of Object.entries(CAL)){
+    if(dt < START || dt > dateStr || dt > END) continue;
+    cumEmp += d.empH; cumIk += d.ikH;
+  }
+  const cumHtml = (day.empH > 0 || day.ikH > 0)
+    ? `<div class="prow" style="margin-top:6px;opacity:.7">
+        <span class="prow-lbl" style="font-size:11px">Acumulado hasta aquí</span>
+        <span class="prow-val" style="font-size:12px">${cumEmp}h emp · ${cumIk}h ik</span>
+       </div>`
+    : '';
+
+  document.getElementById('popup-body').innerHTML = `
+    <div class="pdate">${dateLabel}</div>
+    <div class="pbadge" style="color:${c};background:${c}22;border-color:${c}44">${meta.label}</div>
+    <div class="prows">${rows}${cumHtml}</div>
+    ${schedHtml}`;
+
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('popup').classList.add('show');
+}
+
+function closePopup(){
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('popup').classList.remove('show');
+}
+
+/* ─── INIT ───────────────────────────────────────────── */
+(function init(){
+  // Start on today's month if within range
+  const ty = todayDate.getFullYear(), tm = todayDate.getMonth()+1;
+  const idx = MONTHS.findIndex(([y,m]) => y===ty && m===tm);
+  curIdx = idx >= 0 ? idx : 0;
+
+  renderSummary();
+  renderMonth();
+  renderLegend();
+
+  document.getElementById('prev-btn').addEventListener('click', () => {
+    if(curIdx > 0){ curIdx--; renderMonth(); }
+  });
+  document.getElementById('next-btn').addEventListener('click', () => {
+    if(curIdx < MONTHS.length-1){ curIdx++; renderMonth(); }
+  });
+
+  document.getElementById('overlay').addEventListener('click', closePopup);
+
+  // swipe navigation
+  let tx = 0;
+  const body = document.body;
+  body.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
+  body.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if(Math.abs(dx) > 60){
+      if(dx < 0 && curIdx < MONTHS.length-1){ curIdx++; renderMonth(); }
+      if(dx > 0 && curIdx > 0){ curIdx--; renderMonth(); }
+    }
+  }, {passive:true});
+})();
+</script>
+</body>
+</html>

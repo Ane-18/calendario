@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip3 show *)",
+      "Bash(python3 -c \"import pypdf; print\\('pypdf ok'\\)\")",
+      "Bash(python3 -c \"import PyPDF2; print\\('PyPDF2 ok'\\)\")",
+      "Bash(python3 -c \"import pdfminer; print\\('pdfminer ok'\\)\")",
+      "Bash(pip3 install *)",
+      "Bash(python3 -m pip install pypdf)",
+      "Bash(apt-get install *)",
+      "Bash(sudo apt-get install -y poppler-utils)",
+      "Bash(grep -E \"\\([0-9]{1,2}[h:][0-9]{2}|Enpresa|Ikastetxea|festivo|vacation|lunes|martes|miercoles|jueves|viernes|sabado|domingo|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre\\)\")",
+      "Bash(python3 *)"
+    ]
+  }
+}
