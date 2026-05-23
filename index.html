@@ -4,26 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>FP Dual — ASIR+Cloud 2026-27</title>
-<meta name="theme-color" content="#0f1923">
+<meta name="theme-color" content="#f0f4fb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FP Dual">
 <link rel="manifest" id="manifest-link">
 <style>
 :root {
-  --bg: #0f1923;
-  --surface: #172030;
-  --surface2: #1e2d40;
-  --surface3: #253448;
-  --border: #2c3f58;
-  --text: #dde8f5;
-  --muted: #6a8baa;
-  --accent-emp: #4a9de8;
-  --accent-ik: #3dbf82;
-  --accent-pam: #e8934a;
-  --accent-fes: #e05858;
-  --accent-vac-v: #3bbfa0;
-  --accent-vac-n: #d4b03a;
+  --bg: #f0f4fb;
+  --surface: #ffffff;
+  --surface2: #e8edf8;
+  --surface3: #dce3f2;
+  --border: #c8d2e8;
+  --text: #1a2035;
+  --muted: #6b7a99;
+  --accent-emp: #2563eb;
+  --accent-ik: #16a34a;
+  --accent-pam: #d97706;
+  --accent-fes: #dc2626;
+  --accent-vac-v: #059669;
+  --accent-vac-n: #d97706;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -108,41 +108,41 @@ body{
 .cell.inert:active{transform:none}
 
 /* type colors */
-.t-out    {background:#111923;opacity:.35}
-.t-none   {background:#141e2b;cursor:default}
-.t-weekend{background:#1a2535}
-.t-festivo{background:rgba(224,88,88,.18);border:1px solid rgba(224,88,88,.3)}
-.t-empresa{background:rgba(74,157,232,.2);border:1px solid rgba(74,157,232,.3)}
-.t-pamplona{background:rgba(232,147,74,.22);border:1px solid rgba(232,147,74,.38)}
-.t-dual{background:linear-gradient(135deg,rgba(74,157,232,.22) 50%,rgba(61,191,130,.22) 50%);border:1px solid rgba(74,157,232,.25)}
-.t-ikastetxea{background:rgba(61,191,130,.2);border:1px solid rgba(61,191,130,.3)}
-.t-vacacion_v{background:rgba(59,191,160,.2);border:1px solid rgba(59,191,160,.32)}
-.t-vacacion_n{background:rgba(212,176,58,.2);border:1px solid rgba(212,176,58,.35)}
+.t-out    {background:#dce3f2;opacity:.5}
+.t-none   {background:#f0f4fb;cursor:default}
+.t-weekend{background:#e8edf8}
+.t-festivo{background:rgba(220,38,38,.13);border:1px solid rgba(220,38,38,.4)}
+.t-empresa{background:rgba(37,99,235,.13);border:1px solid rgba(37,99,235,.4)}
+.t-pamplona{background:rgba(217,119,6,.15);border:1px solid rgba(217,119,6,.45)}
+.t-dual{background:linear-gradient(135deg,rgba(37,99,235,.15) 50%,rgba(22,163,74,.15) 50%);border:1px solid rgba(37,99,235,.3)}
+.t-ikastetxea{background:rgba(22,163,74,.13);border:1px solid rgba(22,163,74,.4)}
+.t-vacacion_v{background:rgba(5,150,105,.13);border:1px solid rgba(5,150,105,.4)}
+.t-vacacion_n{background:rgba(217,119,6,.13);border:1px solid rgba(217,119,6,.4)}
 
-.cell.today{box-shadow:0 0 0 2.5px #fff,0 0 0 4px rgba(255,255,255,.15)}
+.cell.today{box-shadow:0 0 0 2.5px #1a2035,0 0 0 4px rgba(26,32,53,.15)}
 .cell.is-start::after,.cell.is-end::after{
   content:'';position:absolute;top:3px;right:3px;
-  width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4);
+  width:5px;height:5px;border-radius:50%;background:rgba(26,32,53,.3);
 }
 
 .dnum{font-size:14px;font-weight:700;line-height:1;color:var(--text)}
 .t-out .dnum,.t-none .dnum,.t-weekend .dnum{color:var(--muted)}
 
 .dhours{font-size:9px;font-weight:800;line-height:1.3;text-align:right}
-.dhours .e{color:#6bbaff}
-.dhours .i{color:#5dd69a}
+.dhours .e{color:#1d4ed8}
+.dhours .i{color:#15803d}
 
 /* ─── LEGEND ─────────────────────────────────────────── */
 .legend{padding:12px 14px 16px}
 .leg-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
 .leg-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
 .leg-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
-.leg-swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.08)}
-.leg-swatch.dual-sw{background:linear-gradient(135deg,rgba(74,157,232,.6) 50%,rgba(61,191,130,.6) 50%)}
+.leg-swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,.12)}
+.leg-swatch.dual-sw{background:linear-gradient(135deg,rgba(37,99,235,.6) 50%,rgba(22,163,74,.6) 50%)}
 
 /* ─── OVERLAY / POPUP ────────────────────────────────── */
 .overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.65);
+  position:fixed;inset:0;background:rgba(26,32,53,.5);
   z-index:200;opacity:0;pointer-events:none;
   transition:opacity .25s;backdrop-filter:blur(6px);
   -webkit-backdrop-filter:blur(6px);
@@ -204,8 +204,8 @@ body{
 <div class="cal-dows">
   <div class="dow">L</div><div class="dow">M</div><div class="dow">X</div>
   <div class="dow">J</div><div class="dow">V</div>
-  <div class="dow" style="color:#d4b03a">S</div>
-  <div class="dow" style="color:#d4b03a">D</div>
+  <div class="dow" style="color:#c0524a">S</div>
+  <div class="dow" style="color:#c0524a">D</div>
 </div>
 
 <div class="cal-grid" id="cal-grid"></div>
@@ -237,16 +237,16 @@ const MN = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
 const DN = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
 const TYPE_META = {
-  empresa:    {label:'Empresa',              color:'#4a9de8'},
-  pamplona:   {label:'Empresa · Pamplona',   color:'#e8934a'},
-  dual:       {label:'Dual',                 color:'#4a9de8'},
-  ikastetxea: {label:'Ikastetxea',           color:'#3dbf82'},
-  festivo:    {label:'Festivo',              color:'#e05858'},
-  vacacion_v: {label:'Vacaciones',           color:'#3bbfa0'},
-  vacacion_n: {label:'Vacaciones (cambio)',  color:'#d4b03a'},
-  weekend:    {label:'Fin de semana',        color:'#4a6080'},
-  out:        {label:'Fuera del período',    color:'#3a4a5a'},
-  none:       {label:'',                     color:'#243447'},
+  empresa:    {label:'Empresa',              color:'#2563eb'},
+  pamplona:   {label:'Empresa · Pamplona',   color:'#d97706'},
+  dual:       {label:'Dual',                 color:'#2563eb'},
+  ikastetxea: {label:'Ikastetxea',           color:'#16a34a'},
+  festivo:    {label:'Festivo',              color:'#dc2626'},
+  vacacion_v: {label:'Vacaciones',           color:'#059669'},
+  vacacion_n: {label:'Vacaciones (cambio)',  color:'#d97706'},
+  weekend:    {label:'Fin de semana',        color:'#6b7a99'},
+  out:        {label:'Fuera del período',    color:'#9aaccc'},
+  none:       {label:'',                     color:'#c5cfdf'},
 };
 
 /* ─── STATE ──────────────────────────────────────────── */
@@ -276,15 +276,15 @@ function computeTotals(){
 
 /* ─── PWA SETUP ──────────────────────────────────────── */
 (function setupPWA(){
-  const icon = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f1923'/><text y='62' x='50' text-anchor='middle' font-size='52' font-family='system-ui'>📅</text></svg>`;
+  const icon = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23f0f4fb'/><text y='62' x='50' text-anchor='middle' font-size='52' font-family='system-ui'>📅</text></svg>`;
   const manifest = {
     name:'FP Dual ASIR+Cloud 2026-27',
     short_name:'FP Dual',
     description:'Calendario laboral FP Dual ASIR+Cloud 2026-27',
     start_url:'./',
     display:'standalone',
-    background_color:'#0f1923',
-    theme_color:'#0f1923',
+    background_color:'#f0f4fb',
+    theme_color:'#f0f4fb',
     icons:[{src:icon,sizes:'any',type:'image/svg+xml'}]
   };
   const blob = new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
@@ -395,7 +395,6 @@ function renderLegend(){
     ['ikastetxea', 'Ikastetxea'],
     ['festivo',    'Festivo'],
     ['vacacion_v', 'Vacaciones'],
-    ['vacacion_n', 'Vac. cambio'],
     ['weekend',    'Fin de semana'],
   ];
 
