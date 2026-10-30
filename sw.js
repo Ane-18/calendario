@@ -1,4 +1,4 @@
-const CACHE = 'fp-dual-v4';
+const CACHE = 'fp-dual-v5';
 self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(
   caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
